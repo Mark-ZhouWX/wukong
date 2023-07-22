@@ -316,9 +316,9 @@ def image_adjust(image_sr, output_mode):
 def postprocess(images, save_path, output_mode, sr_model_path):
     # images = images.asnumpy()
     output = list()
-    save_path_file = os.path.join(save_path, f"diffusion_m{output_mode}")
+    save_path_file = os.path.join(save_path, f"diffusion_m{output_mode}.png")
     final_size = OUTPUT_IMG_SIZE[output_mode]
-    save_path_file_sr = os.path.join(save_path, f"final_m{output_mode}_{final_size[0]}_{final_size[1]}")
+    save_path_file_sr = os.path.join(save_path, f"final_m{output_mode}_{final_size[0]}_{final_size[1]}.png")
     print("save_path: =================================================")
     print(save_path_file)
     print(save_path_file_sr)
