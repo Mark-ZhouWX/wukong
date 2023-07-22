@@ -18,6 +18,13 @@ workspace = os.path.dirname(os.path.abspath(__file__))
 print("workspace", workspace, flush=True)
 sys.path.append(workspace)
 
+OUTPUT_IMG_SIZE = [
+    [1280, 720],
+    [720, 1280],
+    [1200, 900],
+    [900, 1200],
+    [1000, 1000]
+]
 
 @lru_cache()
 def default_wordpiece():
@@ -309,21 +316,9 @@ def image_adjust(image_sr, output_mode):
 def postprocess(images, save_path, output_mode, sr_model_path):
     # images = images.asnumpy()
     output = list()
-    if output_mode == 0:
-        save_path_file  = os.path.join(save_path, "1280_720.png")
-        save_path_file_sr = os.path.join(save_path, "1280_720_sr.png")
-    elif output_mode == 1:
-        save_path_file  = os.path.join(save_path, "720_1280.png")
-        save_path_file_sr = os.path.join(save_path, "720_1280_sr.png")
-    elif output_mode == 2:
-        save_path_file  = os.path.join(save_path, "1200_900.png")
-        save_path_file_sr = os.path.join(save_path, "1200_900_sr.png")
-    elif output_mode == 3:
-        save_path_file  = os.path.join(save_path, "900_1200.png")
-        save_path_file_sr = os.path.join(save_path, "900_1200_sr.png")
-    elif output_mode == 4:
-        save_path_file  = os.path.join(save_path, "1000_1000.png")
-        save_path_file_sr = os.path.join(save_path, "1000_1000_sr.png")
+    save_path_file = os.path.join(save_path, f"diffusion_m{output_mode}")
+    final_size = OUTPUT_IMG_SIZE[output_mode]
+    save_path_file_sr = os.path.join(save_path, f"final_m{output_mode}_{final_size[0]}_{final_size[1]}")
     print("save_path: =================================================")
     print(save_path_file)
     print(save_path_file_sr)
@@ -415,11 +410,8 @@ if __name__ == "__main__":
     parser.add_argument(
         '--save_path', default="./output", type=str, help='')
     parser.add_argument(
-        '--output_mode', default=1, type=int, help='0: 1280*720;'
-                                                     '1: 720*1280;'
-                                                     '2: 1200*900;'
-                                                     '3: 900*1200;'
-                                                     '4: 1000*1000')
+        '--output_mode', default=1, type=int, help='; '.join(f'{i}: {s[0]}*{s[1]}' for i, s in enumerate(OUTPUT_IMG_SIZE)))
+
     args = parser.parse_args()
     time1 = time.time()
     print("==================================")

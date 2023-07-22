@@ -5,7 +5,7 @@ import argparse
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     size = '384_640'
-    # size = '512_512'
+    size = '512_512'
     # size = '512_640'
     # size = '640_384'
     # size = '640_512'
