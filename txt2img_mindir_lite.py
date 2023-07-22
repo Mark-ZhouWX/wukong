@@ -308,7 +308,7 @@ def image_adjust(image_sr, output_mode):
     return image_save
 
 
-def postprocess(images, save_path, output_mode):
+def postprocess(images, save_path, output_mode, sr_model_path):
     # images = images.asnumpy()
     output = list()
     if output_mode == 0:
@@ -340,10 +340,7 @@ def postprocess(images, save_path, output_mode):
         # exit()
         print(image.shape)
         # exit()
-        image_sr = test_rrdb_om_srx4(
-            image,
-            "./models/rrdb_srx4_fp32_new.om"
-            )
+        image_sr = test_rrdb_om_srx4( image, sr_model_path)
         image_save = image_adjust(image_sr, output_mode)
         # print(f"{output_mode}: output_shape {image_save.shape}")
         image_save = cv2.cvtColor(image_save, cv2.COLOR_BGR2RGB)
@@ -352,29 +349,18 @@ def postprocess(images, save_path, output_mode):
     return output
 
 def load_model(mindir_path, context, output_mode):
-    model_path_0 = os.path.join(mindir_path, "wukong_youhua_384_640_out_graph.mindir")
-    model_path_1 = os.path.join(mindir_path, "wukong_youhua_640_384_out_graph.mindir")
-    model_path_2 = os.path.join(mindir_path, "wukong_youhua_512_640_out_graph.mindir")
-    model_path_3 = os.path.join(mindir_path, "wukong_youhua_640_512_out_graph.mindir")
-    model_path_4 = os.path.join(mindir_path, "wukong_youhua_512_512_out_graph.mindir")
-
-    model0 = mslite.Model()
-    model1 = mslite.Model()
-    model2 = mslite.Model()
-    model3 = mslite.Model()
-    model4 = mslite.Model()
-    model0.build_from_file(model_path_0, mslite.ModelType.MINDIR, context)
-    model1.build_from_file(model_path_1, mslite.ModelType.MINDIR, context)
-    model2.build_from_file(model_path_2, mslite.ModelType.MINDIR, context)
-    model3.build_from_file(model_path_3, mslite.ModelType.MINDIR, context)
-    model4.build_from_file(model_path_4, mslite.ModelType.MINDIR, context)
-    model_list = []
-    model_list.append(model0)
-    model_list.append(model1)
-    model_list.append(model2)
-    model_list.append(model3)
-    model_list.append(model4)
-    return model_list   # model0
+    mindir_names = [
+        "wukong_youhua_384_640_out_graph.mindir",
+        "wukong_youhua_640_384_out_graph.mindir",
+        "wukong_youhua_512_640_out_graph.mindir",
+        "wukong_youhua_640_512_out_graph.mindir",
+        "wukong_youhua_512_512_out_graph.mindir",
+    ]
+    assert isinstance(output_mode, int) and output_mode >= 0 and output_mode < len(mindir_names)
+    model_path = os.path.join(mindir_path, mindir_names[output_mode])
+    model = mslite.Model()
+    model.build_from_file(model_path, mslite.ModelType.MINDIR, context)
+    return model   # model0
 
 def main(args):
     work_dir = os.path.dirname(os.path.abspath(__file__))
@@ -392,8 +378,8 @@ def main(args):
     context.ascend.precision_mode = "preferred_fp32"
     print(mindir_path)
     # exit()
-    model_list = load_model(mindir_path, context, args.output_mode)
-    model = model_list[args.output_mode]
+    model = load_model(mindir_path, context, args.output_mode)
+    # model = model_list[args.output_mode]
     # model = mslite.Model()
     # model.build_from_file(mindir_path, mslite.ModelType.MINDIR, context)
 
@@ -411,7 +397,8 @@ def main(args):
     # model = model_list[args.output_mode]
     outputs = model.predict(inputs)
     print("start generating image...")
-    images = postprocess(outputs[0].get_data_to_numpy(), args.save_path, args.output_mode)
+    images = postprocess(outputs[0].get_data_to_numpy(), args.save_path,
+                         args.output_mode, sr_model_path=args.sr_model_path)
 
     return images
 
@@ -422,6 +409,8 @@ if __name__ == "__main__":
                         default="", type=str, help='')
     parser.add_argument(
         '--mindir_path', default="./models/", type=str, help='')
+    parser.add_argument(
+        '--sr_model_path', default="./models/rrdb_srx4_fp32_new.om", type=str, help='')
     parser.add_argument(
         '--vocab_path', default="./config/vocab_zh.txt", type=str, help='')
     parser.add_argument(
@@ -435,7 +424,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     time1 = time.time()
     print("==================================")
-    print(args.output_mode)
+    print(args)
     # exit()
     main(args)
     time2 = time.time()
