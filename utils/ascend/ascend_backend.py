@@ -350,7 +350,7 @@ class AscendBackend(Backend):
         ret = acl.mdl.set_dynamic_hw_size(self.model_id, self.load_input_dataset, index, height, width)
         check_ret("acl.mdl.set_dynamic_hw_size", ret)
 
-    @func_time("execute one step")
+    # @func_time("execute one step")
     def forward(self, **kwargs):
         # Don't support for mindspore (export cannot run with dynamic hw size)
         # width, height = kwargs.get('width'), kwargs.get('height')

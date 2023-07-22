@@ -289,7 +289,6 @@ def preprocess(batch_size, prompt, tokenizer):
 
 
 def image_adjust(image_sr, output_mode):
-    print(f"{output_mode}: input shape {image_sr.shape}")
     if output_mode == 0:
         image_res = cv2.resize(image_sr, (1280, 768))
         image_save = image_res[24:744,:]
@@ -304,7 +303,6 @@ def image_adjust(image_sr, output_mode):
         image_save = image_res[40:1240, 62:962]
     elif output_mode == 4:
         image_save = cv2.resize(image_sr, (1000, 1000))
-    print(f"{output_mode}: output_shape {image_save.shape}")
     return image_save
 
 
@@ -337,11 +335,12 @@ def postprocess(images, save_path, output_mode, sr_model_path):
             base_count = len(os.listdir(save_path))
             img.save(save_path_file)
         print("=========================================")
-        # exit()
-        print(image.shape)
-        # exit()
+
+        print(f'image shape of diffusion model {image.shape}')
         image_sr = test_rrdb_om_srx4( image, sr_model_path)
+        print(f'image shape of super resolution {image_sr.shape}')
         image_save = image_adjust(image_sr, output_mode)
+        print(f'image shape after resize and crop {image_save.shape}')
         # print(f"{output_mode}: output_shape {image_save.shape}")
         image_save = cv2.cvtColor(image_save, cv2.COLOR_BGR2RGB)
         ret = cv2.imwrite(save_path_file_sr, image_save)
