@@ -290,8 +290,7 @@ def tokenize(texts, tokenizer):
 def preprocess(batch_size, prompt, tokenizer):
     unconditional_condition_token = tokenize(batch_size * [""], tokenizer)
     condition_token = tokenize(batch_size * [prompt], tokenizer)
-    print(unconditional_condition_token[0])
-    print(condition_token[0])
+    print(f'start tokenizing prompt')
     return (unconditional_condition_token, condition_token)
 
 
@@ -319,9 +318,8 @@ def postprocess(images, save_path, output_mode, sr_model_path):
     save_path_file = os.path.join(save_path, f"diffusion_m{output_mode}.png")
     final_size = OUTPUT_IMG_SIZE[output_mode]
     save_path_file_sr = os.path.join(save_path, f"final_m{output_mode}_{final_size[0]}_{final_size[1]}.png")
-    print("save_path: =================================================")
-    print(save_path_file)
-    print(save_path_file_sr)
+    print(f'save diffusion image at {save_path_file}')
+    print(f'save final image at {save_path_file_sr}')
     for image in images:
         image = 255. * image.transpose(1, 2, 0)
         output.append(image)
@@ -329,14 +327,13 @@ def postprocess(images, save_path, output_mode, sr_model_path):
             img = Image.fromarray(image.astype(np.uint8))
             base_count = len(os.listdir(save_path))
             img.save(save_path_file)
-        print("=========================================")
 
         print(f'image shape of diffusion model {image.shape}')
-        image_sr = test_rrdb_om_srx4( image, sr_model_path)
+        print(f'load super resolution model from {sr_model_path}')
+        image_sr = test_rrdb_om_srx4(image, sr_model_path)
         print(f'image shape of super resolution {image_sr.shape}')
         image_save = image_adjust(image_sr, output_mode)
         print(f'image shape after resize and crop {image_save.shape}')
-        # print(f"{output_mode}: output_shape {image_save.shape}")
         image_save = cv2.cvtColor(image_save, cv2.COLOR_BGR2RGB)
         ret = cv2.imwrite(save_path_file_sr, image_save)
         assert ret
@@ -352,9 +349,10 @@ def load_model(mindir_path, context, output_mode):
     ]
     assert isinstance(output_mode, int) and output_mode >= 0 and output_mode < len(mindir_names)
     model_path = os.path.join(mindir_path, mindir_names[output_mode])
+    print(f'loading diffusion mindir model from {model_path}')
     model = mslite.Model()
     model.build_from_file(model_path, mslite.ModelType.MINDIR, context)
-    return model   # model0
+    return model
 
 def main(args):
     work_dir = os.path.dirname(os.path.abspath(__file__))
@@ -386,11 +384,11 @@ def main(args):
         inputs[i].set_data_from_numpy(np.asarray(input[i], dtype=np.int32))
 
     # outputs = model.get_outputs()
-    print("start predicting...")
+    print("start sampling with diffusion model...")
     # model.predict(inputs, outputs)
     # model = model_list[args.output_mode]
     outputs = model.predict(inputs)
-    print("start generating image...")
+    print("start generating image with sr model...")
     images = postprocess(outputs[0].get_data_to_numpy(), args.save_path,
                          args.output_mode, sr_model_path=args.sr_model_path)
 
